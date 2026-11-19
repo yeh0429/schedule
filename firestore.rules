@@ -1,0 +1,98 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    // users/{userId}/events/{eventId}
+    //   ownerId: string, required, immutable; must match the signed-in UID.
+    //   title: string, required, 1–120 characters.
+    //   description: string, required, 0–1000 characters.
+    //   location: string, required, 0–160 characters.
+    //   category: string, required; one of work, personal, health, learning,
+    //     family, other.
+    //   startAt/endAt: timestamps, required; endAt must be later than startAt.
+    //   allDay: boolean, required.
+    //   createdAt/updatedAt: timestamps; createdAt is immutable and both must
+    //     be server timestamps on create, updatedAt on every update.
+    //
+    // No profile document is used. All event data is scoped by UID in its path.
+    // ===============================================================
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isDocOwner() {
+      return isAuthenticated() && resource.data.ownerId == request.auth.uid;
+    }
+
+    function uidUnchanged() {
+      return request.resource.data.ownerId == request.auth.uid;
+    }
+
+    function uidNotModified() {
+      return request.resource.data.ownerId == resource.data.ownerId
+        && request.resource.data.ownerId == request.auth.uid;
+    }
+
+    function hasExactEventFields() {
+      return request.resource.data.keys().hasAll([
+          'ownerId', 'title', 'description', 'location', 'category',
+          'startAt', 'endAt', 'allDay', 'createdAt', 'updatedAt'
+        ])
+        && request.resource.data.keys().hasOnly([
+          'ownerId', 'title', 'description', 'location', 'category',
+          'startAt', 'endAt', 'allDay', 'createdAt', 'updatedAt'
+        ]);
+    }
+
+    function isValidEvent() {
+      return hasExactEventFields()
+        && request.resource.data.ownerId is string
+        && request.resource.data.ownerId.size() > 0
+        && request.resource.data.title is string
+        && request.resource.data.title.size() > 0
+        && request.resource.data.title.size() <= 120
+        && request.resource.data.description is string
+        && request.resource.data.description.size() <= 1000
+        && request.resource.data.location is string
+        && request.resource.data.location.size() <= 160
+        && request.resource.data.category is string
+        && request.resource.data.category in [
+          'work', 'personal', 'health', 'learning', 'family', 'other'
+        ]
+        && request.resource.data.startAt is timestamp
+        && request.resource.data.endAt is timestamp
+        && request.resource.data.endAt > request.resource.data.startAt
+        && request.resource.data.allDay is bool
+        && request.resource.data.createdAt is timestamp
+        && request.resource.data.updatedAt is timestamp;
+    }
+
+    match /users/{userId}/events/{eventId} {
+      allow read: if isOwner(userId) && isDocOwner();
+
+      allow create: if isOwner(userId)
+        && uidUnchanged()
+        && isValidEvent()
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time;
+
+      allow update: if isOwner(userId)
+        && isDocOwner()
+        && uidNotModified()
+        && isValidEvent()
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.updatedAt == request.time;
+
+      allow delete: if isOwner(userId) && isDocOwner();
+    }
+  }
+}
+
+
