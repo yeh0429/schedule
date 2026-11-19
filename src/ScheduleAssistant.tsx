@@ -1,9 +1,8 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { Bot, CalendarDays, LoaderCircle, Send, Sparkles, X } from "lucide-react";
-import type { ChatSession } from "firebase/ai";
 import type { ScheduleEvent } from "./types";
 import { aiAssistantReady } from "./firebase";
-import { startScheduleChat } from "./scheduleAssistantModel";
+import { askScheduleAssistant } from "./scheduleAssistantModel";
 
 type Message = { role: "user" | "model"; text: string };
 
@@ -77,7 +76,6 @@ export function ScheduleAssistant({
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const chatRef = useRef<ChatSession | null>(null);
   const endRef = useRef<HTMLDivElement>(null);
   const orderedEvents = useMemo(
     () => [...events].sort((a, b) => a.startAt.getTime() - b.startAt.getTime()),
@@ -109,9 +107,7 @@ export function ScheduleAssistant({
       if (!aiAssistantReady) {
         throw new Error("App Check reCAPTCHA site key is not configured");
       }
-      chatRef.current ??= startScheduleChat();
-      const result = await chatRef.current.sendMessage(makePrompt(text, orderedEvents));
-      const response = result.response.text().trim();
+      const response = await askScheduleAssistant(makePrompt(text, orderedEvents));
       setMessages((current) => [...current, {
         role: "model",
         text: response || "我目前沒有足夠資料回答這個問題。",
