@@ -1,4 +1,5 @@
 import { initializeApp } from "firebase/app";
+import { initializeAppCheck, ReCaptchaEnterpriseProvider } from "firebase/app-check";
 import { getAuth, GoogleAuthProvider } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
@@ -13,7 +14,18 @@ const firebaseConfig = {
   appId: "1:913120661338:web:824ca43c908dd45cc72d63",
 };
 
-const app = initializeApp(firebaseConfig);
+// reCAPTCHA site keys are public by design; this key is restricted to the
+// yeh0429.github.io domain and registered for this Firebase web app in App Check.
+const recaptchaSiteKey = "6LeKCSguAAAAAF-Pph7_E-4VCfPH623gOJJfHWs5";
+export const aiAssistantReady = Boolean(recaptchaSiteKey);
+
+export const app = initializeApp(firebaseConfig);
+if (recaptchaSiteKey) {
+  initializeAppCheck(app, {
+    provider: new ReCaptchaEnterpriseProvider(recaptchaSiteKey),
+    isTokenAutoRefreshEnabled: true,
+  });
+}
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 export const googleProvider = new GoogleAuthProvider();

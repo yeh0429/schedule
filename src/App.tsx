@@ -29,6 +29,7 @@ import {
   LogOut,
   MapPin,
   Menu,
+  MessageCircle,
   MoreHorizontal,
   Plus,
   Search,
@@ -36,18 +37,9 @@ import {
   X,
 } from "lucide-react";
 import { auth, db, googleProvider } from "./firebase";
+import { ScheduleAssistant } from "./ScheduleAssistant";
+import type { Category, ScheduleEvent } from "./types";
 
-type Category = "work" | "personal" | "health" | "learning" | "family" | "other";
-type ScheduleEvent = {
-  id: string;
-  title: string;
-  description: string;
-  location: string;
-  category: Category;
-  startAt: Date;
-  endAt: Date;
-  allDay: boolean;
-};
 type EventDraft = {
   title: string;
   description: string;
@@ -151,6 +143,7 @@ export default function App() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [mobileMenu, setMobileMenu] = useState(false);
+  const [assistantOpen, setAssistantOpen] = useState(false);
 
   useEffect(() => onAuthStateChanged(auth, (nextUser) => {
     setUser(nextUser);
@@ -350,6 +343,17 @@ export default function App() {
       </main>
 
       {modalOpen && <EventModal draft={draft} setDraft={setDraft} event={editingEvent} busy={busy} error={error} onClose={() => setModalOpen(false)} onSave={saveEvent} onDelete={editingEvent ? () => removeEvent(editingEvent) : undefined} />}
+      <button
+        type="button"
+        className={`assistant-launcher ${assistantOpen ? "assistant-launcher-hidden" : ""}`}
+        onClick={() => setAssistantOpen(true)}
+        aria-label="開啟 AI 行程助理"
+        aria-expanded={assistantOpen}
+      >
+        <MessageCircle size={20} />
+        <span>問問行程</span>
+      </button>
+      <ScheduleAssistant open={assistantOpen} onClose={() => setAssistantOpen(false)} events={events} />
     </div>
   );
 }
