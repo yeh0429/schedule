@@ -20,5 +20,6 @@ export type ScheduleValues = Omit<ScheduleEvent, "id" | "startAt" | "endAt"> & {
 export type ScheduleMutation =
   | { operation: "create"; values: ScheduleValues }
   | { operation: "update"; eventId: string; values: ScheduleValues }
-  | { operation: "delete"; eventId: string };
+  | { operation: "delete"; eventId: string }
+  | { operation: "deleteMany"; eventIds: string[] };
 

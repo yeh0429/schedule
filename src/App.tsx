@@ -11,6 +11,7 @@ import {
   serverTimestamp,
   Timestamp,
   updateDoc,
+  writeBatch,
 } from "firebase/firestore";
 import { onAuthStateChanged, signInWithPopup, signOut, type User } from "firebase/auth";
 import {
@@ -281,6 +282,16 @@ export default function App() {
       const target = events.find((event) => event.id === mutation.eventId);
       if (!target) throw new Error("找不到這筆行程，資料可能已更新；請重新查詢後再試。");
       await deleteDoc(doc(db, "users", user.uid, "events", target.id));
+      return;
+    }
+    if (mutation.operation === "deleteMany") {
+      const ids = [...new Set(mutation.eventIds)];
+      if (!ids.length || ids.length > 300 || ids.some((id) => !events.some((event) => event.id === id))) {
+        throw new Error("行程清單已更新，無法確認這批刪除目標。請重新查詢後再試。");
+      }
+      const batch = writeBatch(db);
+      ids.forEach((id) => batch.delete(doc(db, "users", user.uid, "events", id)));
+      await batch.commit();
       return;
     }
 

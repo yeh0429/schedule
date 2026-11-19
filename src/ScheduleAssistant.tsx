@@ -42,20 +42,20 @@ function dateKey(date: Date) {
 function makePrompt(question: string, events: ScheduleEvent[]) {
   const mutationIntent = /新增|建立|安排|加到|修改|編輯|更新|改成|刪除|取消|移除/.test(question);
   const includeDetails = /地點|位置|地址|在哪|備註|說明|細節/.test(question);
-  const eventLines = events.slice(0, 300).map((event) => {
+  const eventLines = events.slice(0, 300).map((event, index) => {
     const timing = event.allDay
       ? "全天"
       : `${formatTime(event.startAt)}–${formatTime(event.endAt)}`;
     const details = includeDetails
       ? `；地點：${event.location || "未設定"}；備註：${event.description || "無"}`
       : "";
-    const id = mutationIntent ? `ID=${event.id}；` : "";
-    return `- ${id}${formatDate(event.startAt)} ${timing}｜${event.title}｜分類：${categoryNames[event.category]}${details}`;
+    const ref = mutationIntent ? `行程代碼 R${index + 1}｜` : "";
+    return `- ${ref}${formatDate(event.startAt)} ${timing}｜${event.title}｜分類：${categoryNames[event.category]}${details}`;
   });
 
   return [
     `現在日期：${formatDate(new Date())}（台北時間）`,
-    `以下是使用者自己的行程資料（共 ${events.length} 筆${events.length > 300 ? "，本次提供前 300 筆" : ""}）：`,
+    `以下是使用者自己的行程資料（共 ${events.length} 筆${events.length > 300 ? "，本次只提供前 300 筆行程代碼 R1 至 R300" : ""}）：`,
     eventLines.length ? eventLines.join("\n") : "（目前沒有行程）",
     `使用者問題：${question}`,
   ].join("\n\n");
@@ -69,8 +69,20 @@ function createPendingMutation(
     return { clarification: proposal.clarificationQuestion || "請再提供一些行程細節，我才能安全地處理。" };
   }
 
+  if (proposal.operation === "deleteMany") {
+    const targets = (proposal.eventRefs ?? []).map((ref) => resolveEventRef(ref, events)).filter((event): event is ScheduleEvent => Boolean(event));
+    const uniqueTargets = [...new Map(targets.map((event) => [event.id, event])).values()];
+    if (!uniqueTargets.length || uniqueTargets.length !== (proposal.eventRefs ?? []).length) {
+      return { clarification: "我無法確認全部目標行程，請重新描述要刪除的日期或行程名稱。" };
+    }
+    if (events.length > 300 && uniqueTargets.length === 300) {
+      return { clarification: "行程筆數較多，無法在同一個提案中列出全部行程。請改用日期或行程名稱分批刪除。" };
+    }
+    return { mutation: { operation: "deleteMany", eventIds: uniqueTargets.map((event) => event.id) } };
+  }
+
   if (proposal.operation === "delete" || proposal.operation === "update") {
-    let matches = proposal.eventId ? events.filter((event) => event.id === proposal.eventId) : [];
+    let matches = proposal.eventRef ? [resolveEventRef(proposal.eventRef, events)].filter((event): event is ScheduleEvent => Boolean(event)) : [];
     if (!matches.length && proposal.title) {
       matches = events.filter((event) =>
         event.title.trim().toLocaleLowerCase() === proposal.title!.trim().toLocaleLowerCase()
@@ -79,7 +91,7 @@ function createPendingMutation(
     }
     if (matches.length !== 1) {
       return { clarification: matches.length > 1
-        ? "我找到多筆相似行程，請告訴我日期或時間，確認要處理哪一筆。"
+        ? `我找到多筆相似行程：${matches.map(describeEvent).join("；")}。請告訴我日期或時間，確認要處理哪一筆。`
         : "我找不到這筆行程，請提供行程名稱和日期。" };
     }
     const target = matches[0];
@@ -125,6 +137,23 @@ function createPendingMutation(
   return { clarification: "我還不確定要如何處理，請換個方式描述你的行程需求。" };
 }
 
+function resolveEventRef(ref: string, events: ScheduleEvent[]) {
+  const match = /^R(\d+)$/.exec(ref.trim());
+  return match ? events[Number(match[1]) - 1] : undefined;
+}
+
+function describeEvent(event: ScheduleEvent) {
+  const time = event.allDay ? "全天" : `${formatTime(event.startAt)}–${formatTime(event.endAt)}`;
+  return `${formatDate(event.startAt)} ${time}「${event.title}」`;
+}
+
+function replaceRefsWithEventDetails(text: string, events: ScheduleEvent[]) {
+  return text.replace(/\bR(\d+)\b/g, (reference) => {
+    const event = resolveEventRef(reference, events);
+    return event ? describeEvent(event) : "該行程";
+  });
+}
+
 function validValues(values: ScheduleValues) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(values.date)) return false;
   const [year, month, day] = values.date.split("-").map(Number);
@@ -138,9 +167,13 @@ function validValues(values: ScheduleValues) {
 }
 
 function mutationSummary(mutation: ScheduleMutation, events: ScheduleEvent[]) {
+  if (mutation.operation === "deleteMany") {
+    const targets = mutation.eventIds.map((id) => events.find((event) => event.id === id)).filter((event): event is ScheduleEvent => Boolean(event));
+    return `刪除以下 ${targets.length} 筆行程：\n${targets.map((event) => `• ${describeEvent(event)}`).join("\n")}`;
+  }
   if (mutation.operation === "delete") {
     const target = events.find((event) => event.id === mutation.eventId);
-    return `刪除「${target?.title ?? "行程"}」（${target ? formatDate(target.startAt) : ""}）`;
+    return target ? `刪除 ${describeEvent(target)}` : "刪除這筆行程";
   }
   const { values } = mutation;
   const time = values.allDay ? "全天" : `${values.startTime}–${values.endTime}`;
@@ -220,12 +253,12 @@ export function ScheduleAssistant({
           setPendingMutation(prepared.mutation);
           setMessages((current) => [...current, { role: "model", text: "我整理好這項變更，請確認內容後再執行。" }]);
         } else {
-          setMessages((current) => [...current, { role: "model", text: prepared.clarification || "請補充行程資訊。" }]);
+          setMessages((current) => [...current, { role: "model", text: replaceRefsWithEventDetails(prepared.clarification || "請補充行程資訊。", orderedEvents) }]);
         }
       } else {
         setMessages((current) => [...current, {
           role: "model",
-          text: result.text || "我目前沒有足夠資料回答這個問題。",
+          text: replaceRefsWithEventDetails(result.text || "我目前沒有足夠資料回答這個問題。", orderedEvents),
         }]);
       }
     } catch (sendError) {
@@ -298,7 +331,7 @@ export function ScheduleAssistant({
               <p>{mutationSummary(pendingMutation, orderedEvents)}</p>
               <div className="assistant-proposal-actions">
                 <button type="button" className="assistant-reject" onClick={() => { setPendingMutation(null); setMessages((current) => [...current, { role: "model", text: "已取消，沒有變更行程。" }]); }}>取消</button>
-                <button type="button" className="assistant-confirm" onClick={() => void confirmMutation()} disabled={busy}>{busy ? "處理中…" : "確認執行"}</button>
+                <button type="button" className="assistant-confirm" onClick={() => void confirmMutation()} disabled={busy}>{busy ? "處理中…" : pendingMutation.operation === "deleteMany" ? `確認刪除 ${pendingMutation.eventIds.length} 筆` : "確認執行"}</button>
               </div>
             </div>
           )}
