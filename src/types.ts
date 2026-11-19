@@ -11,3 +11,14 @@ export type ScheduleEvent = {
   allDay: boolean;
 };
 
+export type ScheduleValues = Omit<ScheduleEvent, "id" | "startAt" | "endAt"> & {
+  date: string;
+  startTime: string;
+  endTime: string;
+};
+
+export type ScheduleMutation =
+  | { operation: "create"; values: ScheduleValues }
+  | { operation: "update"; eventId: string; values: ScheduleValues }
+  | { operation: "delete"; eventId: string };
+

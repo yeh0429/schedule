@@ -444,6 +444,15 @@ button { cursor: pointer; }
 .assistant-spinner { animation: assistant-spin .9s linear infinite; }
 @keyframes assistant-spin { to { transform: rotate(360deg); } }
 .assistant-error { margin: 5px 3px 12px 32px; padding: 10px 12px; color: #a23d45; border-radius: 10px; background: #fff2f2; font-size: 13px; line-height: 1.55; }
+.assistant-proposal { margin: 12px 4px 16px 32px; padding: 14px; border: 1px solid #dce2fa; border-radius: 13px; background: #f8f9ff; }
+.assistant-proposal > strong { color: #38468f; font-size: 14px; }
+.assistant-proposal p { margin: 7px 0 13px; color: #404b63; font-size: 14px; line-height: 1.65; white-space: pre-line; overflow-wrap: anywhere; }
+.assistant-proposal-actions { display: flex; justify-content: flex-end; gap: 8px; }
+.assistant-proposal-actions button { min-height: 36px; padding: 0 13px; border-radius: 9px; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
+.assistant-reject { color: #596477; border: 1px solid #dce1eb; background: #fff; }
+.assistant-confirm { color: #fff; border: 1px solid #5365d4; background: #5b6ee1; }
+.assistant-confirm:hover:not(:disabled) { background: #4c5ed0; }
+.assistant-proposal-actions button:disabled { opacity: .55; cursor: wait; }
 .assistant-composer { flex: 0 0 auto; display: flex; align-items: flex-end; gap: 9px; margin: 0 14px; padding: 10px; border: 1px solid #dfe4ed; border-radius: 14px; background: #fff; }
 .assistant-composer:focus-within { border-color: #9ba8f0; box-shadow: 0 0 0 3px #5b6ee11a; }
 .assistant-composer textarea { width: 100%; min-height: 26px; max-height: 104px; resize: vertical; padding: 3px 0; color: #30394a; border: 0; outline: 0; background: transparent; font: inherit; font-size: 15px; line-height: 1.55; }

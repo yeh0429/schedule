@@ -38,7 +38,7 @@ import {
 } from "lucide-react";
 import { auth, db, googleProvider } from "./firebase";
 import { ScheduleAssistant } from "./ScheduleAssistant";
-import type { Category, ScheduleEvent } from "./types";
+import type { Category, ScheduleEvent, ScheduleMutation } from "./types";
 
 type EventDraft = {
   title: string;
@@ -275,6 +275,51 @@ export default function App() {
     }
   }
 
+  async function applyAssistantMutation(mutation: ScheduleMutation) {
+    if (!user) throw new Error("請先登入，再管理你的行程。");
+    if (mutation.operation === "delete") {
+      const target = events.find((event) => event.id === mutation.eventId);
+      if (!target) throw new Error("找不到這筆行程，資料可能已更新；請重新查詢後再試。");
+      await deleteDoc(doc(db, "users", user.uid, "events", target.id));
+      return;
+    }
+
+    const { values } = mutation;
+    const date = new Date(`${values.date}T00:00:00`);
+    const startAt = values.allDay ? date : atDate(date, values.startTime);
+    const endAt = values.allDay
+      ? new Date(date.getFullYear(), date.getMonth(), date.getDate() + 1)
+      : atDate(date, values.endTime);
+    if (!values.title.trim() || endAt <= startAt) {
+      throw new Error("行程資料不完整或時間不正確，請重新描述後再試。");
+    }
+    if (values.title.length > 120 || values.description.length > 1000 || values.location.length > 160) {
+      throw new Error("行程名稱、地點或備註超過可接受的長度。");
+    }
+
+    const data = {
+      ownerId: user.uid,
+      title: values.title.trim(),
+      description: values.description.trim(),
+      location: values.location.trim(),
+      category: values.category,
+      startAt: Timestamp.fromDate(startAt),
+      endAt: Timestamp.fromDate(endAt),
+      allDay: values.allDay,
+      updatedAt: serverTimestamp(),
+    };
+    if (mutation.operation === "update") {
+      if (!events.some((event) => event.id === mutation.eventId)) {
+        throw new Error("找不到這筆行程，資料可能已更新；請重新查詢後再試。");
+      }
+      await updateDoc(doc(db, "users", user.uid, "events", mutation.eventId), data);
+    } else {
+      await addDoc(collection(db, "users", user.uid, "events"), { ...data, createdAt: serverTimestamp() });
+    }
+    setSelectedDay(date);
+    setCurrentMonth(new Date(date.getFullYear(), date.getMonth(), 1));
+  }
+
   async function logIn() {
     setError("");
     try {
@@ -353,7 +398,7 @@ export default function App() {
         <MessageCircle size={20} />
         <span>問問行程</span>
       </button>
-      <ScheduleAssistant open={assistantOpen} onClose={() => setAssistantOpen(false)} events={events} />
+      <ScheduleAssistant open={assistantOpen} onClose={() => setAssistantOpen(false)} events={events} onApplyMutation={applyAssistantMutation} />
     </div>
   );
 }
