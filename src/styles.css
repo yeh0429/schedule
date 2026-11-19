@@ -317,3 +317,58 @@ button { cursor: pointer; }
 @media (max-width: 720px) { .sidebar { width: 258px; transform: translateX(-105%); transition: transform .22s ease; z-index: 12; box-shadow: 8px 0 25px #27334b14; } .sidebar.sidebar-open { transform: translateX(0); } .mobile-close { display: inline-grid; margin-left: auto; } .mobile-scrim { display: block; position: fixed; inset: 0; z-index: 11; border: 0; background: #1f273551; } .main-area { margin-left: 0; } .topbar { height: 57px; padding: 0 17px; } .breadcrumbs { gap: 7px; } .mobile-menu-button { display: inline-grid; width: 27px; margin-left: -6px; } .topbar-actions { gap: 9px; } .search-box { width: min(40vw,190px); height: 31px; } .search-box kbd { display: none; } .notification-button { display: none; } .page-content { padding: 23px 15px 15px; } .greeting-row { align-items: center; margin-bottom: 18px; } .greeting-row h1 { font-size: 20px; letter-spacing: -.7px; } .subheading { max-width: 285px; font-size: 9px; line-height: 1.7; } .eyebrow { font-size: 9px; } .greeting-add { width: 35px; min-width: 35px; padding: 0; border-radius: 8px; font-size: 0; gap: 0; } .greeting-add svg { width: 18px; } .stats-row { gap: 7px; margin-bottom: 13px; } .stat-card { height: 66px; padding: 9px 8px; gap: 7px; border-radius: 7px; } .stat-icon { width: 28px; height: 28px; border-radius: 7px; } .stat-icon svg { width: 14px; } .stat-card > div:nth-child(2) span { font-size: 8px; } .stat-card strong { font-size: 17px; } .stat-card strong small { font-size: 8px; } .stat-decoration { display: none; } .calendar-card { padding: 12px 10px 0; } .calendar-toolbar { padding-bottom: 10px; gap: 5px; } .calendar-toolbar > div:first-child { flex-direction: column; gap: 3px; align-items: flex-start; } .calendar-toolbar h2 { font-size: 13px; } .calendar-count { font-size: 8px; } .calendar-actions { gap: 4px; } .today-button { height: 27px; padding: 0 7px; font-size: 8px; } .month-switcher .icon-button { width: 26px; height: 26px; } .view-switch { height: 27px; } .view-switch button { min-width: 29px; padding: 0 5px; font-size: 8px; } .weekdays { height: 28px; } .weekdays span { padding-left: 3px; text-align: center; font-size: 8px; } .days-grid { grid-template-rows: repeat(6,minmax(56px,1fr)); } .day-cell { height: 61px; padding: 3px 2px; text-align: center; } .day-number { width: 20px; height: 20px; margin: 0 auto 3px; font-size: 9px; } .day-events { align-items: center; gap: 2px; } .event-pill { width: calc(100% - 2px); height: 13px; justify-content: center; padding: 0 2px; } .pill-title { font-size: 0; } .pill-title::first-letter { font-size: 0; } .pill-time { display: none; } .mobile-event-count { display: inline; color: #a4aab4; font-size: 7px; } .more-events { display: none; } .calendar-footer { min-height: 36px; } .legend { gap: 6px; } .legend > span { gap: 3px; font-size: 7px; } .legend-dot { width: 5px; height: 5px; } .footer-link { font-size: 8px; white-space: nowrap; } .day-panel { padding: 13px; grid-template-columns: 1fr; } .day-panel-head, .day-panel-count, .agenda-list, .upcoming-block { grid-column: 1; grid-row: auto; } .agenda-list { max-height: 230px; } .upcoming-block { margin-top: 12px; padding: 12px 0 0; border-top: 1px solid #eef0f3; border-left: 0; } .page-footer { font-size: 7px; padding-top: 13px; } .list-view { min-height: 330px; } .list-event { gap: 8px; padding: 8px 3px; } .list-event .category-tag { display: none; } .signin-top { height: 65px; padding: 0 19px; } .signin-top-note { font-size: 8px; } .signin-main { width: min(100% - 38px, 500px); min-height: auto; display: flex; flex-direction: column; align-items: stretch; gap: 25px; padding: 34px 0 45px; } .signin-copy { padding: 0; } .signin-copy h1 { margin-top: 14px; font-size: 34px; letter-spacing: -1.2px; } .signin-copy > p { font-size: 11px; } .google-button { width: 100%; } .signin-points { margin-top: 24px; gap: 11px; font-size: 8px; } .signin-preview { min-height: 360px; } .orb-one { width: 300px; height: 300px; } .orb-two { width: 240px; height: 240px; } .preview-window { width: min(100%,350px); min-height: 367px; padding: 12px 17px; } .floating-note { right: -1px; bottom: 5px; } .signin-footer { min-height: 48px; padding: 0 19px; font-size: 7px; } }
 @media (max-width: 390px) { .topbar { padding: 0 11px; } .breadcrumbs { font-size: 9px; } .topbar-actions { gap: 5px; } .search-box { width: 112px; } .page-content { padding-right: 9px; padding-left: 9px; } .greeting-row h1 { font-size: 18px; } .stat-card { gap: 5px; padding: 8px 5px; } .stat-icon { width: 25px; height: 25px; } .calendar-toolbar h2 { font-size: 12px; } .calendar-actions { gap: 3px; } .view-switch button { min-width: 25px; } .legend { gap: 4px; } .legend > span { font-size: 6px; } .page-footer > span:last-child { max-width: 160px; text-align: right; } }
 
+/* Keep secondary labels and helper text readable across the app. */
+.create-button { font-size: 14px; }
+.shortcut, .nav-label, .category-count, .week-card-top, .week-number span,
+.week-card p, .user-info span, .search-box kbd, .eyebrow, .stat-card > div:nth-child(2) span,
+.stat-card strong small, .inline-error, .calendar-count, .today-button, .view-switch button,
+.weekdays span, .day-number, .more-events, .legend > span, .footer-link, .text-button,
+.panel-overline, .day-panel-count, .agenda-time, .agenda-location, .category-tag,
+.empty-agenda > span, .empty-state > span, .empty-agenda button, .upcoming-title strong,
+.upcoming-title .text-button, .upcoming-item small, .upcoming-empty, .page-footer,
+.list-event-date small, .list-event-info small, .modal-kicker, .field-label > span,
+.field-label small, .all-day-toggle, .modal-error, .cancel-button, .delete-button,
+.loading-screen, .signin-top-note, .privacy-note, .signin-error, .signin-points,
+.preview-small-label, .preview-agenda-title, .preview-event strong, .preview-event > div span,
+.preview-bottom-note, .floating-note strong, .floating-note small, .signin-footer {
+  font-size: 12px;
+}
+.nav-link, .category-link, .user-info strong, .breadcrumbs, .search-box input, .subheading,
+.primary-button, .stat-card strong, .agenda-copy strong, .upcoming-item strong,
+.list-event-info strong, .field-label, .field-label input, .field-label select,
+.field-label textarea, .google-button, .signin-copy > p {
+  font-size: 14px;
+}
+.greeting-row h1 { font-size: 30px; }
+.stat-card strong { font-size: 24px; }
+.calendar-toolbar h2 { font-size: 18px; }
+.day-panel-head h3 { font-size: 16px; }
+.list-event-date strong { font-size: 16px; }
+.modal-head h2 { font-size: 20px; }
+.event-pill { font-size: 10px; }
+.empty-agenda strong, .empty-state strong { font-size: 14px; }
+.modal-footer .primary-button { font-size: 13px; }
+
+@media (max-width: 720px) {
+  .breadcrumbs, .eyebrow, .subheading, .stat-card > div:nth-child(2) span,
+  .calendar-count, .today-button, .view-switch button, .weekdays span,
+  .day-number, .legend > span, .footer-link, .page-footer,
+  .signin-top-note, .signin-copy > p, .signin-points, .signin-footer {
+    font-size: 12px;
+  }
+  .greeting-row h1 { font-size: 24px; }
+  .calendar-toolbar h2 { font-size: 16px; }
+  .event-pill { height: 16px; }
+  .mobile-event-count { font-size: 10px; }
+  .legend > span { font-size: 10px; }
+  .page-footer { font-size: 10px; }
+  .signin-copy h1 { font-size: 36px; }
+  .signin-footer { font-size: 10px; }
+}
+
+@media (max-width: 390px) {
+  .breadcrumbs, .legend > span { font-size: 10px; }
+  .greeting-row h1 { font-size: 22px; }
+  .calendar-toolbar h2 { font-size: 14px; }
+}
+
